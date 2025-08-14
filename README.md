@@ -1,4 +1,4 @@
-<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/511f854d-2f55-4c17-9ab7-eb5c304c493a" /># etsio
+# etsio
 A frontend-only Etsy clone built with HTML, CSS, and JavaScript. Features a modern, responsive UI for browsing products, adding items to a cart or favorites list, and viewing product details — functional without a backend.
 # 🛍 Etsio — Etsy Clone
 A frontend-only clone of the Etsy marketplace built with **HTML**, **CSS**, and **JavaScript**.  
