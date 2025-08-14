@@ -32,6 +32,11 @@ Browse products, add them to favorites ❤️, manage your cart 🛒, and view d
 <img width="1366" height="768" alt="Screenshot (435)" src="https://github.com/user-attachments/assets/c24f35d4-3c35-4684-94ab-0fd5f668b951" />
 ---
 ## 🚀 How to Run
+
 1. Clone this repository:
    ```bash
    git clone https://github.com/your-username/etsio.git
+
+2.Open index.html in your browser.
+
+3.Explore the store!
