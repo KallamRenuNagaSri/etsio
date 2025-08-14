@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Etsio</title>
+  <style>
+    :root{
+      --brand:#f1641e; /* Etsy-ish orange */
+      --text:#222;
+      --muted:#6b7280;
+      --bg:#ffffff;
+      --chip:#f3f4f6;
+      --border:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    body { font-family: 'Times New Roman', Times, serif;color:var(--text);background:var(--bg)}
+    a{color:inherit;text-decoration:none}
+    /* Header */
+    .topbar{
+      position:sticky; top:0; z-index:40;
+      background:#fff; border-bottom:1px solid var(--border);
+    }
+    .nav{
+      max-width:1200px; margin:0 auto; padding:12px 16px;
+      display:grid; grid-template-columns:160px 1fr 240px; gap:12px; align-items:center;
+    }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:28px; color:var(--brand)}
+    .brand .menu{display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text); cursor:pointer}
+    .brand .menu:hover{opacity:.8}
+    .search{
+      display:flex; align-items:center; gap:8px; padding:10px 12px; border:2px solid #111; border-radius:999px;
+      background:#fff;
+    }
+    .search input{
+      border:0; outline:0; width:100%; font-size:16px;
+    }
+    .search button{
+      border:0; outline:0; cursor:pointer; width:36px; height:36px; border-radius:50%; background:var(--brand); color:#fff;
+      display:grid; place-items:center; font-weight:700;
+    }
+    .actions{display:flex; gap:14px; justify-content:flex-end; align-items:center}
+    .action{display:flex; align-items:center; gap:6px; cursor:pointer; color:#111; padding:6px 8px; border-radius:8px}
+    .action:hover{background:#f8f8f8}
+    .badge{display:inline-grid; place-items:center; min-width:18px; height:18px; padding:0 4px; font-size:12px; border-radius:999px; background:#111; color:#fff}
+
+    /* Dropdown */
+    .dropdown{position:relative}
+    .dropdown-menu{
+      position:absolute; top:36px; left:0; background:#fff; border:1px solid var(--border); border-radius:10px; padding:8px;
+      display:none; min-width:240px; box-shadow:0 10px 30px rgba(0,0,0,.08);
+    }
+    .dropdown.open .dropdown-menu{display:block}
+    .dropdown-menu a{
+      display:flex; padding:10px 12px; border-radius:8px; font-weight:500;
+    }
+    .dropdown-menu a:hover{background:#f6f7f8}
+
+    /* Page container */
+    .container{max-width:1200px; margin:0 auto; padding:16px}
+    .greeting{
+      margin:14px auto 8px; max-width:900px;
+      background:#fff7f3; border:1px dashed #ffd6c3; color:#5a2b10; padding:10px 14px; border-radius:10px; font-weight:600; display:none;
+    }
+
+    /* Category chips under search bar */
+    .chips{display:flex; flex-wrap:wrap; gap:10px; padding:10px 0 6px}
+    .chip{background:var(--chip); border:1px solid var(--border); padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:500}
+    .chip:hover{background:#e9ecef}
+
+    /* Hero */
+    .hero{
+      display:grid; grid-template-columns:1.2fr .8fr; gap:18px; margin-top:12px;
+    }
+    .banner{
+      background:#ffe7da; border-radius:14px; padding:24px; min-height:280px; display:grid; grid-template-columns:1fr 1fr; gap:14px; overflow:hidden;
+    }
+    .banner h1{font-size:44px; line-height:1.1; margin:0 0 10px}
+    .banner p{color:#444; margin:0 0 16px}
+    .banner .cta{background:#111;color:#fff;border:0;padding:10px 16px;border-radius:999px;cursor:pointer}
+    .card{
+      border-radius:14px; overflow:hidden; position:relative; min-height:280px; background:#eee;
+    }
+    .card img{width:100%; height:100%; object-fit:cover; display:block}
+
+    /* Grid */
+    .sec-title{font-weight:800; font-size:24px; margin:22px 0 8px}
+    .grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px}
+    .item{
+      border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; display:flex; flex-direction:column
+    }
+    .item img{width:100%; height:170px; object-fit:cover; display:block}
+    .item .info{padding:10px 12px; display:flex; flex-direction:column; gap:6px}
+    .price{font-weight:700}
+    .btn{
+      border:1px solid #111; background:#fff; padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600
+    }
+    .btn.primary{background:#111; color:#fff; border-color:#111}
+    .muted{color:var(--muted)}
+    .hidden{display:none}
+
+    /* Favorites drawer */
+    .drawer{
+      position:fixed; right:0; top:0; height:100%; width:380px; max-width:95vw; background:#fff; border-left:1px solid var(--border);
+      transform:translateX(100%); transition:.25s ease; z-index:60; display:flex; flex-direction:column;
+    }
+    .drawer.open{transform:none}
+    .drawer header{display:flex; align-items:center; justify-content:space-between; padding:14px; border-bottom:1px solid var(--border)}
+    .fav-list{padding:14px; display:grid; gap:10px; overflow:auto}
+    .fav-row{display:grid; grid-template-columns:64px 1fr auto; gap:10px; align-items:center; border:1px solid var(--border); border-radius:10px; padding:8px}
+    .fav-row img{width:64px; height:64px; object-fit:cover; border-radius:8px}
+    .x{border:0;background:transparent;cursor:pointer;font-size:20px}
+
+    /* Sign-in modal */
+    .modal{
+      position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:70;
+    }
+    .modal.open{display:flex}
+    .modal .box{
+      background:#fff; width:min(420px,94vw); border-radius:14px; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,.25)
+    }
+    .modal h3{margin:0 0 8px}
+    .field{display:flex; gap:8px}
+    .field input{flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:16px}
+    @media (max-width:900px){
+      .nav{grid-template-columns:130px 1fr 200px}
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .banner{grid-template-columns:1fr}
+    }
+    @media (max-width:560px){
+      .nav{grid-template-columns:1fr}
+      .actions{justify-content:flex-start}
+      .search{order:3}
+      .brand{order:1}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div class="nav">
+      <div class="brand">
+        <a id="homeLink" href="#" style="font-size:30px;color:var(--brand)">Etsio</a>
+        <div class="dropdown" id="catDropdown">
+          <div class="menu" id="catBtn">
+            <!-- simple burger icon -->
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+            Categories
+          </div>
+          <div class="dropdown-menu">
+            <a href="#" data-cat="gifts">Gifts</a>
+            <a href="#" data-cat="kids">Kids &amp; Baby Favorites</a>
+            <a href="#" data-cat="home">Home Favorites</a>
+            <a href="#" data-cat="fashion">Fashion Finds</a>
+          </div>
+        </div>
+      </div>
+
+      <form class="search" id="searchForm">
+        <input id="searchInput" type="search" placeholder="Search for anything" />
+        <button type="submit" aria-label="Search">🔍</button>
+      </form>
+
+      <div class="actions">
+        <div class="action" id="signInBtn">👤 <span>Sign in</span></div>
+        <div class="action" id="favBtn" title="Favorites">❤️ <span class="badge" id="favCount">0</span></div>
+        <div class="action" id="cartBtn" title="Cart">🛒</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GREETING -->
+  <div class="container">
+    <div class="greeting" id="greeting">Hello! <span id="uname"></span> — What would you like to explore today?</div>
+  </div>
+
+  <!-- CATEGORY CHIPS UNDER SEARCH -->
+  <div class="container">
+    <div class="chips">
+      <div class="chip" data-cat="gifts">Gifts</div>
+      <div class="chip" data-cat="kids">Kids &amp; Baby Favorites</div>
+      <div class="chip" data-cat="home">Home Favorites</div>
+      <div class="chip" data-cat="fashion">Fashion Finds</div>
+    </div>
+  </div>
+
+  <!-- HERO LIKE THE SCREENSHOT -->
+  <div class="container">
+    <div class="hero">
+      <section class="banner">
+        <div>
+          <h1>Refresh your home</h1>
+          <p>Shop our favourite lamps, rugs, and more</p>
+          <button class="cta" data-cat="home">Get started</button>
+        </div>
+        <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop" alt="Home decor" style="width:100%;height:100%;object-fit:cover;border-radius:12px">
+      </section>
+      <div class="card">
+        <img src="https://images.unsplash.com/photo-1524758631624-971b3b5664ae?q=80&w=1200&auto=format&fit=crop" alt="Bookshelf">
+        <div style="position:absolute;left:12px;bottom:12px;color:#fff;font-weight:800;font-size:28px;text-shadow:0 2px 14px rgba(0,0,0,.35)">Bookshelves</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORY RESULTS -->
+  <div class="container">
+    <h2 class="sec-title" id="sectionTitle">Discover our best of summer 2025</h2>
+    <div class="grid" id="itemsGrid"></div>
+  </div>
+
+  <!-- FAVORITES DRAWER -->
+  <aside class="drawer" id="favDrawer" aria-label="Favorites panel">
+    <header>
+      <strong>Favorites</strong>
+      <button class="x" id="closeFav">✕</button>
+    </header>
+    <div class="fav-list" id="favList"></div>
+    <div style="padding:14px;border-top:1px solid var(--border)">
+      <button class="btn" id="clearFav">Clear all</button>
+    </div>
+  </aside>
+
+  <!-- SIGN IN MODAL -->
+  <div class="modal" id="signModal" aria-hidden="true">
+    <div class="box">
+      <h3>Sign in</h3>
+      <p class="muted" style="margin-top:0">Enter your name (UI only)</p>
+      <div class="field">
+        <input id="nameInput" type="text" placeholder="Your name" />
+        <button class="btn primary" id="submitName">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Data ----------
+    const CATEGORIES = {
+      gifts: [
+        {id:'g1', title:'Handmade mug', price: '₹799', img:'https://images.unsplash.com/photo-1520975936381-c4b8b4a8b0d1?q=80&w=1000&auto=format&fit=crop'},
+        {id:'g2', title:'Scented candle', price: '₹499', img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1000&auto=format&fit=crop'},
+        {id:'g3', title:'Custom notebook', price: '₹349', img:'https://images.unsplash.com/photo-1519681393-5f7f0f7f0b4b?q=80&w=1000&auto=format&fit=crop'},
+        {id:'g4', title:'Minimal vase', price: '₹999', img:'https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1000&auto=format&fit=crop'}
+      ],
+      kids: [
+        {id:'k1', title:'Soft toy bunny', price: '₹899', img:'https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1000&auto=format&fit=crop'},
+        {id:'k2', title:'Baby knitted set', price: '₹1,499', img:'https://images.unsplash.com/photo-1544435253-f0ead49638f8?q=80&w=1000&auto=format&fit=crop'},
+        {id:'k3', title:'Name wall art', price: '₹799', img:'https://images.unsplash.com/photo-1503457574464-1a56f84b09d9?q=80&w=1000&auto=format&fit=crop'},
+        {id:'k4', title:'Wooden puzzle', price: '₹599', img:'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?q=80&w=1000&auto=format&fit=crop'}
+      ],
+      home: [
+        {id:'h1', title:'Woven rug', price: '₹2,499', img:'https://images.unsplash.com/photo-1505693314120-0d443867891c?q=80&w=1000&auto=format&fit=crop'},
+        {id:'h2', title:'Table lamp', price: '₹1,299', img:'https://images.unsplash.com/photo-1507472374182-0ebcd5948f52?q=80&w=1000&auto=format&fit=crop'},
+        {id:'h3', title:'Throw pillows', price: '₹899', img:'https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=1000&auto=format&fit=crop'},
+        {id:'h4', title:'Bookshelf decor', price: '₹699', img:'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1000&auto=format&fit=crop'}
+      ],
+      fashion: [
+        {id:'f1', title:'Linen tote bag', price: '₹649', img:'https://images.unsplash.com/photo-1520974657720-5655d9f6b9ad?q=80&w=1000&auto=format&fit=crop'},
+        {id:'f2', title:'Beaded bracelet', price: '₹399', img:'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop'},
+        {id:'f3', title:'Handmade scarf', price: '₹1,199', img:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1000&auto=format&fit=crop'},
+        {id:'f4', title:'Leather wallet', price: '₹1,899', img:'https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=1000&auto=format&fit=crop'}
+      ]
+    };
+
+    // ---------- State helpers ----------
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => [...document.querySelectorAll(sel)];
+    const favKey = 'etsio_favorites';
+    const nameKey = 'etsio_username';
+
+    const getFavs = () => JSON.parse(localStorage.getItem(favKey) || '[]');
+    const setFavs = (arr) => localStorage.setItem(favKey, JSON.stringify(arr));
+    const isFav = (id) => getFavs().some(x => x.id === id);
+
+    // ---------- UI: Sign-in ----------
+    const signModal = $('#signModal');
+    $('#signInBtn').addEventListener('click', () => {
+      $('#nameInput').value = localStorage.getItem(nameKey) || '';
+      signModal.classList.add('open');
+      $('#nameInput').focus();
+    });
+    $('#submitName').addEventListener('click', () => {
+      const n = $('#nameInput').value.trim();
+      if(!n){ alert('Please enter your name'); return; }
+      localStorage.setItem(nameKey, n);
+      signModal.classList.remove('open');
+      showGreeting();
+    });
+    signModal.addEventListener('click', (e)=>{
+      if(e.target === signModal) signModal.classList.remove('open');
+    });
+
+    function showGreeting(){
+      const n = localStorage.getItem(nameKey);
+      const g = $('#greeting');
+      if(n){
+        $('#uname').textContent = n + ' — What would you like to explore today?'.replace(' — What would you like to explore today?','');
+        // exact line you wanted:
+        g.innerHTML = `Hello! <strong>${n}</strong> — What would you like to explore today?`;
+        g.style.display = 'block';
+        $('#signInBtn span').textContent = n;
+      } else {
+        g.style.display = 'none';
+        $('#signInBtn span').textContent = 'Sign in';
+      }
+    }
+
+    // ---------- UI: Categories ----------
+    const itemsGrid = $('#itemsGrid');
+    const sectionTitle = $('#sectionTitle');
+
+    function renderCategory(cat){
+      const list = CATEGORIES[cat];
+      if(!list) return;
+      sectionTitle.textContent = ({
+        gifts:'Gifts',
+        kids:'Kids & Baby Favorites',
+        home:'Home Favorites',
+        fashion:'Fashion Finds'
+      })[cat];
+      itemsGrid.innerHTML = list.map(item => `
+        <div class="item">
+          <img src="${item.img}" alt="${item.title}">
+          <div class="info">
+            <div style="font-weight:600">${item.title}</div>
+            <div class="price">${item.price}</div>
+            <button class="btn ${isFav(item.id)?'':'primary'}" data-fav="${item.id}">
+              ${isFav(item.id) ? 'Added ✓' : 'Add to favorites'}
+            </button>
+            <button class="btn" data-cart="${item.id}">Add to cart</button>
+              ${isFav(item.id) ? 'Added ✓' : 'Add to favorites'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Open category from chips, dropdown, hero CTA
+    document.addEventListener('click', (e)=>{
+      const cat = e.target?.dataset?.cat;
+      if(cat){ e.preventDefault(); renderCategory(cat); closeDropdown(); }
+    });
+    // Dropdown behavior
+    const catDrop = $('#catDropdown');
+    const catBtn = $('#catBtn');
+    function closeDropdown(){ catDrop.classList.remove('open'); }
+    catBtn.addEventListener('click', ()=> catDrop.classList.toggle('open'));
+    document.addEventListener('click', (e)=>{
+      if(!catDrop.contains(e.target) && e.target!==catBtn){ closeDropdown(); }
+    });
+
+    // ---------- Favorites ----------
+    function updateFavBadge(){
+      $('#favCount').textContent = getFavs().length;
+    }
+
+    itemsGrid.addEventListener('click', (e)=>{
+      const id = e.target?.dataset?.fav;
+      if(!id) return;
+      const all = Object.values(CATEGORIES).flat();
+      const item = all.find(x=>x.id===id);
+      if(!item) return;
+
+      let favs = getFavs();
+      if(isFav(id)){
+        favs = favs.filter(x=>x.id!==id);
+      } else {
+        favs.push(item);
+      }
+      setFavs(favs);
+      updateFavBadge();
+      // Refresh current category buttons to reflect state
+      const activeTitle = sectionTitle.textContent.trim();
+      const mapTitleToCat = {
+        'Gifts':'gifts', 'Kids & Baby Favorites':'kids',
+        'Home Favorites':'home','Fashion Finds':'fashion'
+      };
+      const cur = mapTitleToCat[activeTitle];
+      if(cur) renderCategory(cur);
+      renderFavs();
+    });
+
+    // Drawer
+    const drawer = $('#favDrawer');
+    $('#favBtn').addEventListener('click', ()=> drawer.classList.add('open'));
+    $('#closeFav').addEventListener('click', ()=> drawer.classList.remove('open'));
+    $('#clearFav').addEventListener('click', ()=>{
+      setFavs([]); updateFavBadge(); renderFavs();
+      // also update buttons on grid
+      const activeTitle = sectionTitle.textContent.trim();
+      const mapTitleToCat = {'Gifts':'gifts','Kids & Baby Favorites':'kids','Home Favorites':'home','Fashion Finds':'fashion'};
+      const cur = mapTitleToCat[activeTitle]; if(cur) renderCategory(cur);
+    });
+
+    function renderFavs(){
+      const favs = getFavs();
+      const box = $('#favList');
+      if(favs.length===0){ box.innerHTML = `<div class="muted">No favorites yet. Add some items ♥</div>`; return; }
+      box.innerHTML = favs.map(i=>`
+        <div class="fav-row">
+          <img src="${i.img}" alt="${i.title}">
+          <div>
+            <div style="font-weight:600">${i.title}</div>
+            <div class="muted">${i.price}</div>
+          </div>
+          <button class="btn" data-remove="${i.id}">Remove</button>
+        </div>
+      `).join('');
+    }
+    $('#favList').addEventListener('click', (e)=>{
+      const id = e.target?.dataset?.remove;
+      if(!id) return;
+      const favs = getFavs().filter(x=>x.id!==id);
+      setFavs(favs); updateFavBadge(); renderFavs();
+      // update grid buttons if visible
+      const activeTitle = sectionTitle.textContent.trim();
+      const mapTitleToCat = {'Gifts':'gifts','Kids & Baby Favorites':'kids','Home Favorites':'home','Fashion Finds':'fashion'};
+      const cur = mapTitleToCat[activeTitle]; if(cur) renderCategory(cur);
+    });
+
+    // ---------- Search (simple: matches item title) ----------
+    $('#searchForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const q = $('#searchInput').value.trim().toLowerCase();
+      if(!q){ return; }
+      const all = Object.values(CATEGORIES).flat();
+      const hits = all.filter(x => x.title.toLowerCase().includes(q));
+      sectionTitle.textContent = `Search results for "${q}"`;
+      itemsGrid.innerHTML = hits.length ? hits.map(item => `
+        <div class="item">
+          <img src="${item.img}" alt="${item.title}">
+          <div class="info">
+            <div style="font-weight:600">${item.title}</div>
+            <div class="price">${item.price}</div>
+            <button class="btn ${isFav(item.id)?'':'primary'}" data-fav="${item.id}">
+              ${isFav(item.id) ? 'Added ✓' : 'Add to favorites'}
+            </button>
+            <button class="btn" data-cart="${item.id}">Add to cart</button>
+              ${isFav(item.id) ? 'Added ✓' : 'Add to favorites'}
+            </button>
+          </div>
+        </div>
+      `).join('') : `<div class="muted">No results. Try another keyword.</div>`;
+    });
+
+    // ---------- Home link ----------
+    $('#homeLink').addEventListener('click', (e)=>{
+      e.preventDefault();
+      sectionTitle.textContent = 'Discover our best of summer 2025';
+      // show a default category (home) grid to keep it lively
+      renderCategory('home');
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+
+    
+    // ---------- CART ----------
+    const cartKey = 'etsio_cart';
+    const getCart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
+    const setCart = (arr) => localStorage.setItem(cartKey, JSON.stringify(arr));
+    const isInCart = (id) => getCart().some(x => x.id === id);
+
+    function updateCartBadge(){
+      const count = getCart().length;
+      if(!document.getElementById('cartCount')){
+        const badge = document.createElement('span');
+        badge.id = 'cartCount';
+        badge.className = 'badge';
+        document.getElementById('cartBtn').appendChild(badge);
+      }
+      document.getElementById('cartCount').textContent = count;
+    }
+
+    function renderCart(){
+      const cart = getCart();
+      const box = document.getElementById('cartList');
+      if(cart.length===0){
+        box.innerHTML = '<div class="muted">Your cart is empty.</div>';
+        return;
+      }
+      box.innerHTML = cart.map(i => `
+        <div class="fav-row">
+          <img src="${i.img}" alt="${i.title}">
+          <div>
+            <div style="font-weight:600">${i.title}</div>
+            <div class="muted">${i.price}</div>
+          </div>
+          <button class="btn" data-remove-cart="${i.id}">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('cartBtn').addEventListener('click', ()=>{
+      document.getElementById('cartDrawer').classList.add('open');
+      renderCart();
+    });
+    document.getElementById('closeCart').addEventListener('click', ()=>{
+      document.getElementById('cartDrawer').classList.remove('open');
+    });
+    document.getElementById('clearCart').addEventListener('click', ()=>{
+      setCart([]);
+      updateCartBadge();
+      renderCart();
+    });
+
+    document.getElementById('cartList').addEventListener('click', (e)=>{
+      const id = e.target?.dataset?.removeCart;
+      if(!id) return;
+      const cart = getCart().filter(x=>x.id!==id);
+      setCart(cart);
+      updateCartBadge();
+      renderCart();
+    });
+
+    // Add to cart from items grid
+    itemsGrid.addEventListener('click', (e)=>{
+      const id = e.target?.dataset?.cart;
+      if(!id) return;
+      const all = Object.values(CATEGORIES).flat();
+      const item = all.find(x=>x.id===id);
+      if(!item) return;
+      let cart = getCart();
+      if(isInCart(id)){
+        alert('Item already in cart');
+      } else {
+        cart.push(item);
+        setCart(cart);
+        updateCartBadge();
+      }
+    });
+
+    // ---------- Init ----------
+    function init(){
+      showGreeting();
+      updateFavBadge();
+      renderFavs();
+      renderCategory('home'); // default
+    }
+    init();
+  </script>
+
+  <!-- CART DRAWER -->
+  <aside class="drawer" id="cartDrawer" aria-label="Cart panel">
+    <header>
+      <strong>Cart</strong>
+      <button class="x" id="closeCart">✕</button>
+    </header>
+    <div class="fav-list" id="cartList"></div>
+    <div style="padding:14px;border-top:1px solid var(--border)">
+      <button class="btn" id="clearCart">Clear all</button>
+    </div>
+  </aside>
+
+</body>
+</html>
